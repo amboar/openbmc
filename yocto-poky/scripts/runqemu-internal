@@ -325,7 +325,7 @@ case "$TUNE_ARCH" in
     ;;
 esac
 
-QEMU_BIN="$STAGING_BINDIR_NATIVE/$QEMU_NAME"
+QEMU_BIN="/home/andrew/.local/bin/$QEMU_NAME"
 QEMU="$QEMU_BIN $QEMU_OPTIONS"
 
 if [ "$FSTYPE" = "nfs" ]; then
@@ -346,6 +346,11 @@ fi
 
 if [ "$FSTYPE" = "iso" ]; then
     QEMUOPTIONS="$CPU_SUBTYPE $QEMU_NETWORK_CMD -cdrom $ROOTFS $QEMU_UI_OPTIONS"
+fi
+
+if [ "$FSTYPE" = "raw" ]; then
+    QEMU_NETWORK_CMD="-net nic $QEMU_TAP_CMD"
+    QEMUOPTIONS="$CPU_SUBTYPE $QEMU_NETWORK_CMD $QEMU_UI_OPTIONS -nographic"
 fi
 
 if [ -z "$QEMUOPTIONS" ]; then
@@ -461,6 +466,8 @@ if [ "$IS_VM" = "yes" -a "$FSTYPE" != "iso" ]; then
     elif grep -q 'root=/dev/hd' $ROOTFS ; then
         echo "Using ide drive"
         VM_DRIVE="$ROOTFS"
+    elif [ $FSTYPE = "raw" ]; then
+        VM_DRIVE="-drive file=$ROOTFS,format=$FSTYPE,if=mtd"
     else
         echo "Using virtio block drive"
         VM_DRIVE="-drive if=virtio,file=$ROOTFS"

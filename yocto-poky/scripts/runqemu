@@ -89,7 +89,7 @@ check_fstype() {
     /ramfs/)
         FSTYPE="cpio.gz"
         ;;
-    /hddimg/|/hdddirect/|/vmdk/|/wic/|/qcow2/|/vdi/|/iso/)
+    /hddimg/|/hdddirect/|/vmdk/|/wic/|/qcow2/|/vdi/|/iso/|/raw/)
         IS_VM="yes"
         ;;
     *)
@@ -199,8 +199,14 @@ fi
 
 . $runqemu_file || exit 1
 
+if [ -n "$QEMU_ROOTFS" ]
+then
+    ROOTFS="$QEMU_ROOTFS"
+fi
+
 KERNEL=${KERNEL:=$DEPLOY_DIR_IMAGE/$QEMU_DEFAULT_KERNEL}
 FSTYPE=${FSTYPE:=$QEMU_DEFAULT_FSTYPE}
+check_fstype $FSTYPE
 
 if [ "$QEMU_AUDIO_DRV" = "alsa" ]; then
     if [ "$TUNE_ARCH" = "x86" -o "$TUNE_ARCH" = "x86_64" ]; then
