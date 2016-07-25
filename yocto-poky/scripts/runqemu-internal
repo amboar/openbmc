@@ -42,6 +42,8 @@ fi
 # sudo.
 NOSUDO_FLAG="/etc/runqemu-nosudo"
 
+. $(dirname $0)/oe-find-native-sysroot
+
 QEMUIFUP=`which runqemu-ifup 2> /dev/null`
 QEMUIFDOWN=`which runqemu-ifdown 2> /dev/null`
 if [ -z "$QEMUIFUP" -o ! -x "$QEMUIFUP" ]; then
