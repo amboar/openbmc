@@ -12,6 +12,7 @@ SRC_URI += "file://phosphor-gpio-keys.scc"
 SRC_URI += "file://phosphor-gpio-keys.cfg"
 SRC_URI += "file://phosphor-vlan.scc"
 SRC_URI += "file://phosphor-vlan.cfg"
+SRC_URI += "file://v3-0001-fsi-occ-Use-PutOCCSRAM-in-circular-mode-for-OCC-a.patch"
 SRC_URI_append_df-obmc-ubi-fs = " file://0001-ARM-dts-Aspeed-Witherspoon-Update-BMC-partitioning.patch"
 
 

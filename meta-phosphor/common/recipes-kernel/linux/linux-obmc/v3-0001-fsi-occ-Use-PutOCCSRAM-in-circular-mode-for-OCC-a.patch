@@ -1,0 +1,82 @@
+From fead90a2efa23212ab60cc4af21bb569187a8a02 Mon Sep 17 00:00:00 2001
+From: Andrew Jeffery <andrew@aj.id.au>
+Date: Fri, 27 Apr 2018 13:22:17 +0930
+Subject: [PATCH linux dev-4.13 v3] fsi: occ: Use PutOCCSRAM in circular mode
+ for OCC attention
+To: joel@jms.id.au
+Cc: Edward A. James <eajames@us.ibm.com>,
+    Matt Spinler <mspinler@linux.vnet.ibm.com>,
+    openbmc@lists.ozlabs.org
+
+We can't do SCOMs from the BMC when the host is booted in secure mode,
+and without triggering the attention of the OCC our commands won't be
+processed. Further, the SCOM operation fails, which causes the OCC
+driver's probe to fail, which leads the BMC to think that the OCC has
+failed.
+
+We have an alternative to the SCOM though: We can trigger the OCC by
+writing the correct attention magic in circular buffer mode.
+
+The PutOCCSRAM operation returns the written data length in the response
+payload before the 0xCODE word, so the condition testing the success of
+the operation is rearranged.
+
+Signed-off-by: Andrew Jeffery <andrew@aj.id.au>
+---
+
+v3:
+* Address Matt Spinler's feedback that the address field is ignored in mode 3
+
+Tested on two Witherspoon systems, one with secure-boot enabled and one without
+
+v2:
+* Minor typo and documentation cleanups
+
+ drivers/fsi/fsi-occ.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/fsi/fsi-occ.c b/drivers/fsi/fsi-occ.c
+index 45ae13cd7a3d..938601fd7347 100644
+--- a/drivers/fsi/fsi-occ.c
++++ b/drivers/fsi/fsi-occ.c
+@@ -575,19 +575,16 @@ static int occ_putsram(struct device *sbefifo, u32 address, u8 *data,
+ static int occ_trigger_attn(struct device *sbefifo)
+ {
+ 	int rc;
+-	__be32 buf[6];
++	__be32 buf[7];
+ 	struct sbefifo_client *client;
+ 
+-	/*
+-	 * Magic sequence to do SBE putscom command. SBE will write 8 bytes to
+-	 * specified SCOM address.
+-	 */
+-	buf[0] = cpu_to_be32(0x6);
+-	buf[1] = cpu_to_be32(0xa202);
+-	buf[2] = 0;
+-	buf[3] = cpu_to_be32(0x6D035);
+-	buf[4] = cpu_to_be32(0x20010000);	/* trigger occ attention */
+-	buf[5] = 0;
++	buf[0] = cpu_to_be32(0x5 + 0x2);        /* Chip-op length in words */
++	buf[1] = cpu_to_be32(0xa404);           /* PutOCCSRAM */
++	buf[2] = cpu_to_be32(0x3);              /* Mode: Circular */
++	buf[3] = cpu_to_be32(0x0);              /* Address: ignored in mode 3 */
++	buf[4] = cpu_to_be32(0x8);              /* Data length in bytes */
++	buf[5] = cpu_to_be32(0x20010000);       /* Trigger OCC attention */
++	buf[6] = 0;
+ 
+ 	client = sbefifo_drv_open(sbefifo, 0);
+ 	if (!client)
+@@ -602,8 +599,7 @@ static int occ_trigger_attn(struct device *sbefifo)
+ 		goto done;
+ 
+ 	/* check for good response */
+-	if ((be32_to_cpu(buf[0]) != 0xC0DEA202) ||
+-	    (be32_to_cpu(buf[1]) & 0x0FFFFFFF))
++	if ((be32_to_cpu(buf[0]) != 8) || (be32_to_cpu(buf[1]) != 0xC0DEA404))
+ 		rc = -EBADMSG;
+ 
+ done:
+-- 
+2.14.1
+
