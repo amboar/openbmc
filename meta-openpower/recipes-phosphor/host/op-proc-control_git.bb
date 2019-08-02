@@ -11,6 +11,7 @@ inherit autotools obmc-phosphor-utils pkgconfig pythonnative
 inherit systemd
 
 SRC_URI += "git://github.com/openbmc/openpower-proc-control"
+SRC_URI += "file://0001-nmi-Use-libpdbg-directly.patch"
 SRCREV = "16ab00cb9383b17b8dd033a1cb300e2a013d55b1"
 
 DEPENDS += " \
@@ -18,6 +19,7 @@ DEPENDS += " \
         phosphor-logging \
         phosphor-dbus-interfaces \
         openpower-dbus-interfaces \
+        libpdbg \
         "
 RDEPENDS_${PN} += "pdbg"
 
@@ -29,5 +31,4 @@ SYSTEMD_SERVICE_${PN} = "${TEMPLATE} ${INSTANCES}"
 
 SYSTEMD_SERVICE_${PN} +=  " \
                          xyz.openbmc_project.Control.Host.NMI.service \
-                         nmi.service \
                          "
