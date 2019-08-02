@@ -9,6 +9,7 @@ SRC_URI += "git://github.com/open-power/pdbg.git"
 SRCREV = "dbbb35af951e36cb1ff134bdf74a5346d316e782"
 
 DEPENDS += "dtc-native"
+DEPENDS += "libfdt"
 
 S = "${WORKDIR}/git"
 
