@@ -11,6 +11,8 @@ SRCREV = "dbbb35af951e36cb1ff134bdf74a5346d316e782"
 DEPENDS += "dtc-native"
 DEPENDS += "libfdt"
 
+PROVIDES += "libpdbg"
+
 S = "${WORKDIR}/git"
 
 inherit autotools
