@@ -1,0 +1,26 @@
+From 4195d56c80e8a6bc8bb342a7c6135986b863d4e2 Mon Sep 17 00:00:00 2001
+From: Andrew Jeffery <andrew@aj.id.au>
+Date: Thu, 19 Sep 2019 20:50:26 +0930
+Subject: [PATCH 4/4] hack: net: ftgmac100: Disregard RX_ERR for Tacoma
+
+Signed-off-by: Andrew Jeffery <andrew@aj.id.au>
+---
+ drivers/net/ethernet/faraday/ftgmac100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/faraday/ftgmac100.c b/drivers/net/ethernet/faraday/ftgmac100.c
+index e20b20428b27..61f266ebe42e 100644
+--- a/drivers/net/ethernet/faraday/ftgmac100.c
++++ b/drivers/net/ethernet/faraday/ftgmac100.c
+@@ -494,7 +494,7 @@ static bool ftgmac100_rx_packet(struct ftgmac100 *priv, int *processed)
+ 			status &= ~FTGMAC100_RXDES0_RUNT;
+ 
+ 		/* Any error still in there ? */
+-		if (status & RXDES0_ANY_ERROR) {
++		if (status & (RXDES0_ANY_ERROR & ~FTGMAC100_RXDES0_RX_ERR)) {
+ 			ftgmac100_rx_packet_error(priv, status);
+ 			goto drop;
+ 		}
+-- 
+2.20.1
+

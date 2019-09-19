@@ -1,0 +1,27 @@
+From e174a16516018b2af14f5f2f4fd7e1615916486d Mon Sep 17 00:00:00 2001
+From: Andrew Jeffery <andrew@aj.id.au>
+Date: Thu, 19 Sep 2019 20:46:35 +0930
+Subject: [PATCH 3/4] ARM: dts: tacoma: Enable 50MHz RMII RCLK for NCSI
+
+Signed-off-by: Andrew Jeffery <andrew@aj.id.au>
+---
+ arch/arm/boot/dts/aspeed-bmc-opp-tacoma.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/aspeed-bmc-opp-tacoma.dts b/arch/arm/boot/dts/aspeed-bmc-opp-tacoma.dts
+index 408af001c06c..c4bd882f81e1 100644
+--- a/arch/arm/boot/dts/aspeed-bmc-opp-tacoma.dts
++++ b/arch/arm/boot/dts/aspeed-bmc-opp-tacoma.dts
+@@ -27,6 +27,9 @@
+ &mac2 {
+ 	status = "okay";
+ 	pinctrl-names = "default";
++	clocks = <&syscon ASPEED_CLK_GATE_MAC3CLK>,
++		 <&syscon ASPEED_CLK_GATE_MAC3RCLK>;
++	clock-names = "MACCLK", "RCLK";
+ 	pinctrl-0 = <&pinctrl_rmii3_default>;
+ 	use-ncsi;
+ };
+-- 
+2.20.1
+
