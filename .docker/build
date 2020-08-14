@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+set -x
+
+WORKDIR="$(realpath $(dirname $0)/..)"
+DOCKERDIR="${WORKDIR}/.docker"
+
+# Drop this
+DISTRO=openbmc-witherspoon
+MACHINE=witherspoon
+export DISTRO MACHINE
+
+TARGET_VENDOR=ubuntu
+
+# wheee
+set +euo pipefail
+eval "$(source setup $MACHINE 2>&1 && bitbake -e | grep '^SANITY_TESTED_DISTROS=' | tr -d ' \t*')"
+set -euo pipefail
+
+TESTED_DISTROS="$(echo -e "$SANITY_TESTED_DISTROS" | grep $TARGET_VENDOR | sort -n)"
+DOCKER_DISTROS="$(basename --multiple $(echo ${DOCKERDIR}/${TARGET_VENDOR}* | tr ' ' '\n') | sort -n)"
+
+BUILD_OS=$(comm -12 <(echo "$TESTED_DISTROS") <(echo "$DOCKER_DISTROS") | tail -n 1)
+
+__UID=$UID __GROUPS=$GROUPS envsubst < ${DOCKERDIR}/${BUILD_OS} | tee ${DOCKERDIR}/Dockerfile
+
+BUILD_TAG=openbmc-${BUILD_OS}
+
+BUILD_VOLUMES=$(for p in $SSTATE_DIR $DL_DIR; do if [ -n "$p" ]; then echo "--volume $p:$p "; fi; done)
+
+docker build -t $BUILD_TAG $DOCKERDIR -f ${DOCKERDIR}/Dockerfile
+docker run \
+  --net=host \
+  --rm=true \
+  --env DISTRO=$DISTRO \
+  --env MACHINE=$MACHINE \
+  --env BB_ENV_EXTRAWHITE="$BB_ENV_EXTRAWHITE" \
+  --env-file <(for var in $BB_ENV_EXTRAWHITE; do echo $var=${!var}; done) \
+  --workdir "$WORKDIR" \
+  --user "$USER" \
+  --volume "$HOME":"$HOME" \
+  $BUILD_VOLUMES \
+  $BUILD_TAG ${DOCKERDIR}/bake
